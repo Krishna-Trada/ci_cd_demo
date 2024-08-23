@@ -1,0 +1,60 @@
+name: "Build & Release"
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  build_android:
+    name: Web Build & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      #1 Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+        #2 Setup Java
+      - name: Set up Java
+        uses: actions/setup-java@v3.12.0
+        with:
+          distribution: 'oracle'
+          java-version: '17'
+
+        #3 Set up Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.2'
+          channel: 'stable'
+
+        #4 Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+        #5 build web
+      - name: Build Web
+        run: flutter build web --release --web-renderer canvaskit
+
+      - name: Zip the web build folder
+        run: |
+          sudo apt-get install zip
+          zip -r build-web.zip build/web
+
+      - name: Create 'releases' directory
+        run: mkdir -p releases
+
+      - name: Move zip to 'releases' folder
+        run: mv build-web.zip releases/build-web.zip
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add releases/build-web.zip
+          git commit -m "Add Flutter web build to releases folder"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
