@@ -4,6 +4,9 @@ on:
     branches:
       - release
 
+permissions:
+  contents: write  # Grant write access to repository contents
+  
 jobs:
   build_android:
     name: Web Build & Release
